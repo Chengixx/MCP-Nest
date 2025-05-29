@@ -23,6 +23,18 @@ const App: React.FC = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [kbContent, setKbContent] = useState("");
+  const chatListRef = useRef<HTMLDivElement>(null);
+  const [streaming, setStreaming] = useState(false);
+  const [streamContent, setStreamContent] = useState("");
+
+  // 自动滚动到底部
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      if (chatListRef.current) {
+        chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
+      }
+    }, 0);
+  };
 
   const handleFileUpload = (file: File) => {
     if (file.type !== "text/plain") {
@@ -38,27 +50,52 @@ const App: React.FC = () => {
     return false; // 阻止自动上传
   };
 
+  // 伪流式显示AI回复
+  const fakeStreamReply = (fullText: string) => {
+    setStreaming(true);
+    setStreamContent("");
+    let i = 0;
+    function showNext() {
+      setStreamContent(fullText.slice(0, i + 1));
+      scrollToBottom();
+      if (i < fullText.length - 1) {
+        i++;
+        setTimeout(showNext, Math.floor(Math.random() * 60));
+      } else {
+        setMessages((msgs) => [
+          ...msgs,
+          { role: "assistant", content: fullText },
+        ]);
+        setStreaming(false);
+        setStreamContent("");
+        scrollToBottom();
+      }
+    }
+    showNext();
+  };
+
   const sendMessage = async () => {
     if (!input.trim()) return;
     const userMsg: ChatMessage = { role: "user", content: input };
     setMessages([...messages, userMsg]);
     setLoading(true);
     setInput("");
+    scrollToBottom();
     try {
       const res = await axios.post("http://localhost:3001/chat", {
         message: userMsg.content,
         knowledge: kbContent,
       });
-      setMessages((msgs) => [
-        ...msgs,
-        { role: "assistant", content: res.data.reply },
-      ]);
+      fakeStreamReply(res.data.reply);
     } catch (e) {
       setMessages((msgs) => [
         ...msgs,
         { role: "assistant", content: "AI回复失败，请稍后重试。" },
       ]);
       antdMessage.error("请求后端失败，请检查服务是否启动");
+      setStreaming(false);
+      setStreamContent("");
+      scrollToBottom();
     }
     setLoading(false);
   };
@@ -81,6 +118,7 @@ const App: React.FC = () => {
         )}
       </div>
       <div
+        ref={chatListRef}
         style={{
           height: 360,
           overflowY: "auto",
@@ -95,7 +133,11 @@ const App: React.FC = () => {
         }}
       >
         <List
-          dataSource={messages}
+          dataSource={
+            streaming
+              ? [...messages, { role: "assistant", content: streamContent }]
+              : messages
+          }
           renderItem={(item) => (
             <List.Item
               style={{
@@ -142,15 +184,16 @@ const App: React.FC = () => {
             sendMessage();
           }
         }}
-        disabled={loading}
+        disabled={loading || streaming}
         placeholder="请输入你的问题..."
         style={{ resize: "none" }}
       />
       <Button
         type="primary"
         onClick={sendMessage}
-        loading={loading}
+        loading={loading || streaming}
         style={{ marginTop: 8, float: "right" }}
+        disabled={streaming}
       >
         发送
       </Button>
