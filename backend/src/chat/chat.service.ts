@@ -41,8 +41,8 @@ export class ChatService {
       .map((t) => `${t.name}: ${t.description}`)
       .join('\n');
 
-    // 让AI判断是否用工具
-    const decisionPrompt = `你是一个智能助手。已注册工具如下：\n${toolListStr}\n用户问题："${message}"\n如果你需要用某个工具来回答，请只回复工具名（如 greetingTool 或 zhanchengTool），否则请只回复 NONE。`;
+    // 优化决策 prompt，加入 few-shot 示例和更明确的描述
+    const decisionPrompt = `你是一个智能助手。已注册工具如下：\n${toolListStr}\n\n工具使用说明：\n- greetingTool：用于打招呼或寒暄。\n- zhanchengTool：用于介绍展程公司相关内容。\n- knowledgeTool：用于查找资料、回答专业、学术、百科、技术、历史、事实、定义、原理等问题，或你无法直接回答时优先使用。\n\n示例：\n用户问题：\"你好\" → 回复：greetingTool\n用户问题：\"展程是做什么的\" → 回复：zhanchengTool\n用户问题：\"什么是人工智能？\" → 回复：knowledgeTool\n用户问题：\"请介绍一下机器学习的发展历史\" → 回复：knowledgeTool\n用户问题：\"请给我讲讲牛顿定律\" → 回复：knowledgeTool\n\n用户问题：\"${message}\"\n如果你需要用某个工具来回答，请只回复工具名（如 greetingTool、zhanchengTool、knowledgeTool），否则请只回复 NONE。`;
     let aiDecision = '';
     try {
       const response = await axios.post(
@@ -70,9 +70,7 @@ export class ChatService {
       // 命中工具的情况下，调用工具
       try {
         let toolInput: any = {};
-        // if (toolName === 'zhanchengTool') {
         toolInput = { message };
-        // }
         console.log(toolInput, 'toolInput');
         console.log(toolName, 'toolName');
         const toolResult = await this.mcpService.callTool(toolName, toolInput);
