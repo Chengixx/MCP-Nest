@@ -60,7 +60,7 @@ const App: React.FC = () => {
       scrollToBottom();
       if (i < fullText.length - 1) {
         i++;
-        setTimeout(showNext, Math.floor(Math.random() * 60));
+        setTimeout(showNext, Math.floor(Math.random() * 30));
       } else {
         setMessages((msgs) => [
           ...msgs,
