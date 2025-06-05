@@ -1,0 +1,11 @@
+{
+  "name": "localai",
+  "version": "1.0.0",
+  "description": "Local AI project with frontend, backend and MCP server",
+  "scripts": {
+    "start": "node scripts/start.js",
+    "installAll": "node scripts/install.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
