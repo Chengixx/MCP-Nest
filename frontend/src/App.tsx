@@ -5,8 +5,6 @@ import {
   message as antdMessage,
   Typography,
   Tooltip,
-  Modal,
-  Form,
   Tabs,
 } from "antd";
 import axios from "axios";
