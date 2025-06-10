@@ -5,6 +5,24 @@
   background: #f5f7fb;
 }
 
+.app-wrapper {
+  padding: 20px;
+  height: 60vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-tabs {
+  margin-bottom: 20px;
+}
+
+.app-tabs .ant-tabs-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
 .chat-container {
   width: 800px;
   margin: 20px auto;

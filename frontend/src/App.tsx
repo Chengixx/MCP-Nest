@@ -8,6 +8,7 @@ import {
   Tooltip,
   Modal,
   Form,
+  Tabs,
 } from "antd";
 import axios from "axios";
 import {
@@ -17,6 +18,7 @@ import {
   CheckOutlined,
 } from "@ant-design/icons";
 import "./App.css";
+import KnowledgeBase from "./components/KnowledgeBase";
 
 const { TextArea } = Input;
 const { Title } = Typography;
@@ -146,107 +148,128 @@ const App: React.FC = () => {
     }
   };
 
-  return (
-    <div className="chat-container">
-      <div className="chat-header">
-        <Title level={4} style={{ margin: 0 }}>
-          AI 智能助手
-        </Title>
-        <div className="upload-buttons">
-          <Button
-            onClick={() => setIsTextModalVisible(true)}
-            style={{ marginRight: 8 }}
-          >
-            输入文本
-          </Button>
-          <Upload
-            beforeUpload={handleFileUpload}
-            showUploadList={false}
-            className="upload-button"
-          >
-            <Button icon={<UploadOutlined />}>上传文件</Button>
-          </Upload>
-        </div>
-      </div>
-
-      <div className="chat-messages" ref={chatListRef}>
-        {(streaming
-          ? [...messages, { role: "assistant", content: streamContent }]
-          : [
-              ...messages,
-              ...(loading ? [{ role: "loading", content: "" }] : []),
-            ]
-        ).map((item, index) => (
-          <div
-            key={index}
-            className={`chat-message ${item.role === "user" ? "user" : ""}`}
-          >
-            <div className={`message-bubble ${item.role}`}>
-              <div className="message-header">
-                <div className="message-sender">
-                  {item.role === "user"
-                    ? "我"
-                    : item.role === "loading"
-                    ? "AI"
-                    : "AI"}
-                </div>
-                {item.role !== "loading" && (
-                  <Tooltip
-                    title={copiedMessageId === index ? "已复制" : "复制内容"}
-                  >
-                    <Button
-                      type="text"
-                      className="copy-button"
-                      icon={
-                        copiedMessageId === index ? (
-                          <CheckOutlined />
-                        ) : (
-                          <CopyOutlined />
-                        )
-                      }
-                      onClick={() => handleCopy(item.content, index)}
-                    />
-                  </Tooltip>
-                )}
-              </div>
-              <div className="message-content">
-                {item.role === "loading" ? <LoadingDots /> : item.content}
-              </div>
+  const items = [
+    {
+      key: 'chat',
+      label: 'AI 对话',
+      children: (
+        <div className="chat-container">
+          <div className="chat-header">
+            <Title level={4} style={{ margin: 0 }}>
+              AI 智能助手
+            </Title>
+            <div className="upload-buttons">
+              <Button
+                onClick={() => setIsTextModalVisible(true)}
+                style={{ marginRight: 8 }}
+              >
+                输入文本
+              </Button>
+              <Upload
+                beforeUpload={handleFileUpload}
+                showUploadList={false}
+                className="upload-button"
+              >
+                <Button icon={<UploadOutlined />}>上传文件</Button>
+              </Upload>
             </div>
           </div>
-        ))}
-      </div>
 
-      <div className="chat-input-container">
-        <div className="chat-input-wrapper">
-          <TextArea
-            className="chat-textarea"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onCompositionStart={() => setIsComposing(true)}
-            onCompositionEnd={() => setIsComposing(false)}
-            onPressEnter={(e) => {
-              if (!e.shiftKey && !isComposing) {
-                e.preventDefault();
-                sendMessage();
-              }
-            }}
-            disabled={loading || streaming}
-            placeholder="输入消息，按 Enter 发送，Shift + Enter 换行..."
-            autoSize={{ minRows: 1, maxRows: 4 }}
-          />
-          <Button
-            type="primary"
-            className="send-button"
-            onClick={sendMessage}
-            loading={loading || streaming}
-            disabled={!input.trim() || streaming}
-            icon={<SendOutlined />}
-          >
-            {!loading && !streaming && "发送"}
-          </Button>
+          <div className="chat-messages" ref={chatListRef}>
+            {(streaming
+              ? [...messages, { role: "assistant", content: streamContent }]
+              : [
+                  ...messages,
+                  ...(loading ? [{ role: "loading", content: "" }] : []),
+                ]
+            ).map((item, index) => (
+              <div
+                key={index}
+                className={`chat-message ${item.role === "user" ? "user" : ""}`}
+              >
+                <div className={`message-bubble ${item.role}`}>
+                  <div className="message-header">
+                    <div className="message-sender">
+                      {item.role === "user"
+                        ? "我"
+                        : item.role === "loading"
+                        ? "AI"
+                        : "AI"}
+                    </div>
+                    {item.role !== "loading" && (
+                      <Tooltip
+                        title={copiedMessageId === index ? "已复制" : "复制内容"}
+                      >
+                        <Button
+                          type="text"
+                          className="copy-button"
+                          icon={
+                            copiedMessageId === index ? (
+                              <CheckOutlined />
+                            ) : (
+                              <CopyOutlined />
+                            )
+                          }
+                          onClick={() => handleCopy(item.content, index)}
+                        />
+                      </Tooltip>
+                    )}
+                  </div>
+                  <div className="message-content">
+                    {item.role === "loading" ? <LoadingDots /> : item.content}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="chat-input-container">
+            <div className="chat-input-wrapper">
+              <TextArea
+                className="chat-textarea"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onCompositionStart={() => setIsComposing(true)}
+                onCompositionEnd={() => setIsComposing(false)}
+                onPressEnter={(e) => {
+                  if (!e.shiftKey && !isComposing) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+                disabled={loading || streaming}
+                placeholder="输入消息，按 Enter 发送，Shift + Enter 换行..."
+                autoSize={{ minRows: 1, maxRows: 4 }}
+              />
+              <Button
+                type="primary"
+                className="send-button"
+                onClick={sendMessage}
+                loading={loading || streaming}
+                disabled={!input.trim() || streaming}
+                icon={<SendOutlined />}
+              >
+                {!loading && !streaming && "发送"}
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
+      ),
+    },
+    {
+      key: 'knowledge',
+      label: '知识库管理',
+      children: <KnowledgeBase />,
+    },
+  ];
+
+  return (
+    <div className="app-wrapper">
+      <Tabs
+        defaultActiveKey="chat"
+        items={items}
+        className="app-tabs"
+      />
 
       <Modal
         title="添加文本到知识库"
