@@ -17,6 +17,7 @@ import {
   UploadOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
+import type { RcFile } from "antd/es/upload";
 
 interface KnowledgeItem {
   id: string;
@@ -95,19 +96,32 @@ const KnowledgeBase: React.FC = () => {
     }
   };
 
-  const handleFileUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    try {
-      await axios.post("http://localhost:3001/upload/file", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      message.success("知识库已上传");
-      fetchData(); // 刷新列表
-    } catch {
-      message.error("上传失败");
+  const handleFileRead = (file: RcFile): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        resolve(content);
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsText(file);
+    });
+  };
+
+  const handleFileUpload = async (file: RcFile) => {
+    if (file.type !== 'text/plain') {
+      message.error('只能上传 TXT 文件！');
+      return false;
     }
-    return false;
+
+    try {
+      const content = await handleFileRead(file);
+      form.setFieldsValue({ content });
+      return false; // Prevent default upload behavior
+    } catch (error) {
+      message.error('文件读取失败');
+      return false;
+    }
   };
 
   const columns = [
@@ -167,9 +181,6 @@ const KnowledgeBase: React.FC = () => {
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
           添加知识
         </Button>
-        <Upload beforeUpload={handleFileUpload} showUploadList={false}>
-          <Button icon={<UploadOutlined />}>上传文件</Button>
-        </Upload>
       </div>
 
       <Table
@@ -183,8 +194,11 @@ const KnowledgeBase: React.FC = () => {
         title={editingItem ? "编辑知识" : "添加知识"}
         open={modalVisible}
         onOk={handleModalOk}
-        onCancel={() => setModalVisible(false)}
-        width={600}
+        onCancel={() => {
+          setModalVisible(false);
+          form.resetFields();
+        }}
+        width={800}
       >
         <Form form={form} layout="vertical">
           <Form.Item name="title" label="标题">
@@ -196,14 +210,27 @@ const KnowledgeBase: React.FC = () => {
             rules={[{ required: true, message: "请输入内容" }]}
           >
             <Input.TextArea
-              placeholder="请输入内容"
-              autoSize={{ minRows: 4, maxRows: 8 }}
+              rows={6}
+              placeholder="请输入内容或上传TXT文件"
             />
+          </Form.Item>
+          <Form.Item label="上传TXT文件">
+            <Upload
+              accept=".txt"
+              beforeUpload={handleFileUpload}
+              showUploadList={false}
+              maxCount={1}
+            >
+              <Button icon={<UploadOutlined />}>选择TXT文件</Button>
+            </Upload>
+            <div style={{ marginTop: 8, color: '#666' }}>
+              支持上传TXT文件，文件内容将自动填充到内容框中
+            </div>
           </Form.Item>
           <Form.Item name="description" label="描述">
             <Input.TextArea
               placeholder="请输入描述（选填）"
-              autoSize={{ minRows: 2, maxRows: 4 }}
+              rows={4}
             />
           </Form.Item>
         </Form>
