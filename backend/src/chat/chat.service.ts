@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { McpService } from '../mcp/mcp.service';
 import axios from 'axios';
+import { chat } from 'src/ai/chat';
 
 @Injectable()
 export class ChatService {
@@ -20,7 +21,7 @@ export class ChatService {
       tools = res.tools;
     } catch {
       // 获取失败，降级为普通对话
-      const normalRes = await this.callAliyunModel(message);
+      const normalRes = await chat(message);
       return { reply: normalRes };
     }
     const toolListStr = tools
@@ -42,10 +43,10 @@ ${toolListStr}
     // console.log('决策 prompt:', decisionPrompt);
     let aiDecision = '';
     try {
-      aiDecision = await this.callAliyunModel(decisionPrompt);
+      aiDecision = await chat(decisionPrompt);
     } catch {
       // 决策失败，降级为普通对话
-      const normalRes = await this.callAliyunModel(message);
+      const normalRes = await chat(message);
       return { reply: normalRes };
     }
     // 判断命中工具
@@ -63,29 +64,8 @@ ${toolListStr}
       }
     } else {
       // 没有命中的话，走普通对话
-      const normalRes = await this.callAliyunModel(message);
+      const normalRes = await chat(message);
       return { reply: normalRes };
-    }
-  }
-
-  private async callAliyunModel(prompt: string): Promise<string> {
-    try {
-      const response = await axios.post(
-        'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
-        {
-          model: 'qwen-turbo',
-          input: { prompt },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-      return response?.data?.output?.text?.trim() || '';
-    } catch {
-      return 'AI回复失败，请检查API Key和网络。';
     }
   }
 }
