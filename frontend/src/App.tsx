@@ -3,7 +3,6 @@ import {
   Input,
   Button,
   message as antdMessage,
-  Upload,
   Typography,
   Tooltip,
   Modal,
@@ -12,7 +11,6 @@ import {
 } from "antd";
 import axios from "axios";
 import {
-  UploadOutlined,
   SendOutlined,
   CopyOutlined,
   CheckOutlined,
@@ -47,8 +45,6 @@ const App: React.FC = () => {
   const [streamContent, setStreamContent] = useState("");
   const [copiedMessageId, setCopiedMessageId] = useState<number | null>(null);
   const [isComposing, setIsComposing] = useState(false);
-  const [isTextModalVisible, setIsTextModalVisible] = useState(false);
-  const [textForm] = Form.useForm();
 
   // 自动滚动到底部
   const scrollToBottom = () => {
@@ -57,20 +53,6 @@ const App: React.FC = () => {
         chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
       }
     }, 0);
-  };
-
-  const handleFileUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    try {
-      await axios.post("http://localhost:3001/upload/file", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      antdMessage.success("知识库已上传");
-    } catch {
-      antdMessage.error("上传失败");
-    }
-    return false;
   };
 
   // 伪流式显示AI回复
@@ -134,20 +116,6 @@ const App: React.FC = () => {
     }
   };
 
-  const handleTextSubmit = async (values: {
-    content: string;
-    filename: string;
-  }) => {
-    try {
-      await axios.post("http://localhost:3001/upload/text", values);
-      antdMessage.success("文本已添加到知识库");
-      setIsTextModalVisible(false);
-      textForm.resetFields();
-    } catch (error) {
-      antdMessage.error("添加文本失败");
-    }
-  };
-
   const items = [
     {
       key: 'chat',
@@ -158,21 +126,6 @@ const App: React.FC = () => {
             <Title level={4} style={{ margin: 0 }}>
               AI 智能助手
             </Title>
-            <div className="upload-buttons">
-              <Button
-                onClick={() => setIsTextModalVisible(true)}
-                style={{ marginRight: 8 }}
-              >
-                输入文本
-              </Button>
-              <Upload
-                beforeUpload={handleFileUpload}
-                showUploadList={false}
-                className="upload-button"
-              >
-                <Button icon={<UploadOutlined />}>上传文件</Button>
-              </Upload>
-            </div>
           </div>
 
           <div className="chat-messages" ref={chatListRef}>
@@ -270,39 +223,6 @@ const App: React.FC = () => {
         items={items}
         className="app-tabs"
       />
-
-      <Modal
-        title="添加文本到知识库"
-        open={isTextModalVisible}
-        onCancel={() => {
-          setIsTextModalVisible(false);
-          textForm.resetFields();
-        }}
-        footer={null}
-        centered
-      >
-        <Form form={textForm} onFinish={handleTextSubmit} layout="vertical">
-          <Form.Item
-            name="filename"
-            label="文件名"
-            rules={[{ required: true, message: "请输入文件名" }]}
-          >
-            <Input placeholder="请输入文件名（不需要.txt后缀）" />
-          </Form.Item>
-          <Form.Item
-            name="content"
-            label="文本内容"
-            rules={[{ required: true, message: "请输入文本内容" }]}
-          >
-            <TextArea rows={6} placeholder="请输入要添加到知识库的文本内容" />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" block>
-              提交
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
     </div>
   );
 };

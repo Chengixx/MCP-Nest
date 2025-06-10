@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, message, Space, Popconfirm } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Input, message, Space, Popconfirm, Upload } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import axios from 'axios';
 
 interface KnowledgeItem {
@@ -74,6 +74,21 @@ const KnowledgeBase: React.FC = () => {
     }
   };
 
+  const handleFileUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      await axios.post("http://localhost:3001/upload/file", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      message.success("知识库已上传");
+      fetchData(); // 刷新列表
+    } catch {
+      message.error("上传失败");
+    }
+    return false;
+  };
+
   const columns = [
     {
       title: '标题',
@@ -123,10 +138,16 @@ const KnowledgeBase: React.FC = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: '16px', display: 'flex', gap: '8px' }}>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
           添加知识
         </Button>
+        <Upload
+          beforeUpload={handleFileUpload}
+          showUploadList={false}
+        >
+          <Button icon={<UploadOutlined />}>上传文件</Button>
+        </Upload>
       </div>
 
       <Table
