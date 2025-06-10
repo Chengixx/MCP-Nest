@@ -6,9 +6,15 @@ import { McpController } from './mcp/mcp.controller';
 import { McpService } from './mcp/mcp.service';
 import { UploadController } from './upload/upload.controller';
 import { UploadService } from './upload/upload.service';
+import { KnowledgeModule } from './knowledge/knowledge.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
-  imports: [ConfigModule.forRoot()],
+  imports: [
+    ConfigModule.forRoot(),
+    KnowledgeModule,
+    PrismaModule,
+  ],
   controllers: [ChatController, McpController, UploadController],
   providers: [ChatService, McpService, UploadService],
 })
