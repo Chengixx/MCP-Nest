@@ -2,15 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { Tool } from '@rekog/mcp-nest';
 import { z } from 'zod';
 import { ChatTool } from './chatTool';
-import { WarehouseService } from '../../warehouse/warehouse.service';
 import { chat } from 'src/ai/chat';
 
 @Injectable()
 export class KnowledgeTool {
-  constructor(
-    private readonly chatTool: ChatTool,
-    private readonly warehouseService: WarehouseService,
-  ) {}
+  constructor(private readonly chatTool: ChatTool) {}
 
   @Tool({
     name: 'knowledgeTool',
